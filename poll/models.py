@@ -1,5 +1,6 @@
-from django.contrib.auth.models import User
 from django.db import models
+
+from account.models import User
 
 
 class Poll(models.Model):
@@ -23,4 +24,3 @@ class Vote(models.Model):
     poll = models.ForeignKey(Poll, on_delete=models.CASCADE)
     choice = models.ForeignKey(Choice, on_delete=models.CASCADE)
     voted_by = models.ForeignKey(User, on_delete=models.CASCADE)
-

@@ -5,10 +5,10 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 import poll
-from poll.models import Poll, Choice, Vote
-from poll.serializers import (PollPatchSerializer,
-                              PollSerializer, UserSerializer, ChoiceSerializer, ChoicePatchSerializer, VoteSerializer,
-                              VoterSerializer)
+from poll.models import Choice, Poll, Vote
+from poll.serializers import (ChoicePatchSerializer, ChoiceSerializer,
+                              PollPatchSerializer, PollSerializer,
+                              UserSerializer, VoterSerializer, VoteSerializer)
 
 
 class PollView(APIView):
@@ -83,8 +83,6 @@ class ChoiceView(APIView):
         serializer = ChoiceSerializer(choices, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-
-
     def post(self, request):
         serializer = ChoiceSerializer(data=request.data)
         if serializer.is_valid():
@@ -94,10 +92,8 @@ class ChoiceView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-
-
 class ChoiceCRUDView(APIView):
-    def get(self,request, pk):
+    def get(self, request, pk):
         choice = get_object_or_404(Choice, pk=pk)
         serializer = ChoiceSerializer(choice)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -126,6 +122,8 @@ class ChoiceCRUDView(APIView):
         return Response(
             {"message": "Choice Succesfully deleted"}, status=status.HTTP_202_ACCEPTED
         )
+
+
 class VoteView(APIView):
     def get(self, request):
         votes = Vote.objects.all()
@@ -147,6 +145,7 @@ class VoteDetailView(APIView):
         vote = get_object_or_404(Vote, pk=pk)
         serializer = VoteSerializer(vote)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
     def put(self, request, pk):
         vote = get_object_or_404(Vote, pk=pk)
         serializer = VoteSerializer(vote, data=request.data)
@@ -158,7 +157,7 @@ class VoteDetailView(APIView):
 
     def patch(self, request, pk):
         vote = get_object_or_404(Vote, pk=pk)
-        serializer =VoterSerializer(vote, data=request.data)
+        serializer = VoterSerializer(vote, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
