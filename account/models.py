@@ -1,11 +1,16 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils.text import slugify
+from drf_yasg.openapi import Response
+from rest_framework import status
+from rest_framework.decorators import action
+
 
 
 class User(AbstractUser):
     phone = models.CharField(max_length=13, unique=True)
     email = models.EmailField(unique=True)
+    interests = models.ManyToManyField("Interest", related_name="interests")
 
     def __str__(self):
         return self.username

@@ -1,8 +1,9 @@
-from django.urls import path
+from django.urls import include, path
+from rest_framework import routers
 
-from poll.views import ChoiceCRUDView, ChoiceView
+from poll.views import ChoiceViewSet
 
-urlpatterns = [
-    path("choices/", ChoiceView.as_view(), name="choices-list"),
-    path("choices/<int:pk>/", ChoiceCRUDView.as_view(), name="choices-list"),
-]
+router = routers.DefaultRouter()
+router.register(r"choices", ChoiceViewSet)
+
+urlpatterns = router.urls

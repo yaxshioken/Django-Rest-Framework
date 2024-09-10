@@ -1,8 +1,7 @@
-from django.urls import path
+from rest_framework.routers import DefaultRouter
 
-from poll.views import VoteDetailView, VoteView
+from poll import views
 
-urlpatterns = [
-    path("votes/", VoteView.as_view(), name="vote-list"),
-    path("votes/<int:pk>/", VoteDetailView.as_view(), name="vote-detail"),
-]
+router = DefaultRouter()
+router.register("votes", views.VoteViewSet, basename="votes")
+urlpatterns = router.urls

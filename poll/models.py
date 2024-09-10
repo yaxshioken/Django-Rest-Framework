@@ -14,7 +14,7 @@ class Poll(models.Model):
 
 class Choice(models.Model):
     poll = models.ForeignKey(Poll, on_delete=models.CASCADE)
-    choice = models.TextField()
+    question = models.TextField()
 
     def __str__(self):
         return self.choice

@@ -1,30 +1,37 @@
-from rest_framework import serializers
+from django.db.models import CharField
+from django.template.context_processors import request
+from rest_framework import serializers, status
+from rest_framework.generics import get_object_or_404
+from rest_framework.relations import PrimaryKeyRelatedField
+from rest_framework.response import Response
 
 from account.models import User
 from poll.models import Choice, Poll, Vote
 
 
-class PollSerializer(serializers.Serializer):
-    id = serializers.IntegerField()
-    author = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
-    question = serializers.CharField()
-    pub_date = serializers.DateTimeField()
+class PollSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Poll
+        fields = ("id", "author", "question", "pub_date")
+        read_only_fields = ("id", "pub_date")
 
     def create(self, validated_data):
-        return Poll.objects.create(**validated_data)
+        return super().create(validated_data)
+
+    def list(self, request, *args, **kwargs):
+        serializer = PollSerializer(data=self.queryset.all(), many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def update(self, instance, validated_data):
-        instance.author = validated_data.get("author", instance.author)
         instance.question = validated_data.get("question", instance.question)
-        Poll.objects.update(**instance.dict())
+        instance.pub_date = validated_data.get("pub_date", instance.pub_date)
+        instance.author = validated_data.get("author", instance.author)
+        instance.save()
         return instance
 
-
-class PollPatchSerializer(serializers.Serializer):
-    id = serializers.IntegerField(read_only=True)
-    author_id = serializers.IntegerField(allow_null=True, required=False)
-    question = serializers.CharField(allow_blank=True, required=False)
-    pub_date = serializers.DateTimeField(allow_null=True, required=False)
+    def destroy(self, instance):
+        instance.delete()
+        return {"success": True}
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -33,69 +40,33 @@ class UserSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class PollDetailSerializer(serializers.Serializer):
-    id = serializers.IntegerField(read_only=True)
-    autor_id = serializers.IntegerField(read_only=True)
-    question = serializers.CharField(read_only=True)
-    pub_date = serializers.DateTimeField(read_only=True)
-
-
-class ChoiceSerializer(serializers.Serializer):
-    id = serializers.IntegerField(required=False)
-    poll_id = serializers.CharField()
-    choice = serializers.CharField()
+class ChoiceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Choice
+        fields = ("id", "poll", "question")
+        read_only_fields = ("id",)
 
     def create(self, validated_data):
-        instance = Choice.objects.create(**validated_data)
-        return instance
+        return super().create(validated_data)
+
+    def list(self, request, *args, **kwargs):
+        serializer = ChoiceSerializer(data=self.query_set.all(), many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def update(self, instance, validated_data):
-        instance.choice = validated_data.get("choice", instance.choice)
-        instance.poll_id = validated_data.get("poll_id", instance.poll_id)
+        instance.question = validated_data.get("question", instance.question)
+        instance.poll = validated_data.get("poll", instance.poll)
+
         instance.save()
         return instance
 
-
-class ChoicePatchSerializer(serializers.Serializer):
-    id = serializers.IntegerField(read_only=True, required=False)
-    poll_id = serializers.CharField(allow_null=True, required=False, allow_blank=True)
-    choice = serializers.CharField(allow_null=True, required=False, allow_blank=True)
-
-    def update(self, instance, validated_data):
-        instance.choice = validated_data.get("choice", instance.choice)
-        instance.poll_id = validated_data.get("poll_id", instance.poll_id)
-        instance.save()
-        return instance
+    def destroy(self, instance):
+        instance.delete()
+        return {"success": True}
 
 
 class VoteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Vote
         fields = "__all__"
-
-
-class VoterSerializer(serializers.ModelSerializer):
-    id = serializers.IntegerField(required=False)
-    choice_id = serializers.PrimaryKeyRelatedField(
-        queryset=Choice.objects.all(), allow_null=True, required=False
-    )
-    voted_by = serializers.PrimaryKeyRelatedField(
-        queryset=User.objects.all(), allow_null=True, required=False
-    )
-    poll = serializers.PrimaryKeyRelatedField(
-        queryset=Poll.objects.all(), allow_null=True, required=False
-    )
-
-    class Meta:
-        model = Vote
-        fields = "__all__"
-
-    def create(self, validated_data):
-        instance = Vote.objects.create(**validated_data)
-        return instance
-
-    def update(self, instance, validated_data):
-        instance.voted_by = validated_data.get("voted_by", instance.voted_by)
-        instance.poll = validated_data.get("poll", instance.poll)
-        instance.save()
-        return instance
+        read_only_fields = ("id",)

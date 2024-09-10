@@ -13,9 +13,9 @@ class PollAdmin(admin.ModelAdmin):
 
 @admin.register(Choice)
 class ChoiceAdmin(admin.ModelAdmin):
-    list_display = ("id", "poll", "choice")
+    list_display = ("id", "poll", "question")
     list_display_links = ("id", "poll")
-    list_filter = ("poll", "choice")
+    list_filter = ("poll", "question")
 
 
 @admin.register(Vote)

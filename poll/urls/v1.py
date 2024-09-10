@@ -1,13 +1,10 @@
-from django.urls import path
+from django.urls import include, path
+from rest_framework.routers import DefaultRouter
 
-from poll.views import (PollDeleteView, PollDetailView, PollPatchView,
-                        PollPutView, PollView, UserCreateView)
+from poll.views import PollViewSet, UserCreateView
 
+router = DefaultRouter()
+router.register("polls", PollViewSet, basename="polls")
 urlpatterns = [
-    path("users/", UserCreateView.as_view(), name="users"),
-    path("poll/", PollView.as_view(), name="poll-list"),
-    path("put/<int:pk>/", PollPutView.as_view(), name="poll-put"),
-    path("patch/<int:pk>/", PollPatchView.as_view(), name="poll-patch"),
-    path("delete/<int:pk>/", PollDeleteView.as_view(), name="poll-delete"),
-    path("detail/<int:pk>/", PollDetailView.as_view(), name="poll-detail"),
+    path("", include(router.urls)),
 ]

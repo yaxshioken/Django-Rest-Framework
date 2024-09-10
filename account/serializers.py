@@ -1,7 +1,7 @@
-from drf_yasg.openapi import Response
-from rest_framework import serializers, status
+from rest_framework import serializers
+from rest_framework.serializers import ModelSerializer
 
-from account.models import Interest, Profile, User
+from account.models import Profile, User, Interest
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -11,7 +11,7 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ["username", "password", "password2", "email"]
 
-    def create(self, validated_data):
+    def validate(self, validated_data):
         password = validated_data.pop("password")
         password2 = validated_data.pop("password2")
 
@@ -20,11 +20,7 @@ class UserSerializer(serializers.ModelSerializer):
 
         user = User.objects.create_user(**validated_data, password=password)
         return user
-    def retrieve(self, request, pk=None):
-        user = User.objects.get(pk=pk)
-        serializer = UserSerializer(user)
-        return Response(serializer.data,status=status.HTTP_200_OK)
-    
+
     class Meta:
         model = User
         fields = "__all__"
@@ -47,4 +43,28 @@ class InterestSerializer(serializers.ModelSerializer):
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
-        fields = ("city", "passport_number", "passport_letter")
+        fields = ("city", "passport_number", "passport_letter", "interests")
+
+
+class AccountDetialSeriaizer(ModelSerializer):
+    profile = ProfileSerializer()
+
+    class Meta:
+        model = User
+        fields = (
+            "id",
+            "username",
+            "email",
+            "first_name",
+            "last_name",
+            "phone",
+            "profile",
+        )
+        extra_kwargs = {
+            "email": {"required": False, "allow_null": True},
+            "first_name": {"required": False, "allow_null": True},
+            "last_name": {"required": False, "allow_null": True},
+            "profile": {"required": False, "allow_null": True},
+            "password": {"write_only": True, "required": False},
+            "password2": {"write_only": True, "required": False},
+        }
