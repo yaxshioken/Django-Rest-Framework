@@ -23,13 +23,25 @@ class Profile(models.Model):
 
 class Interest(models.Model):
     name = models.CharField(max_length=200)
-    slug = models.SlugField(unique=True,null=True,blank=True)
+    slug = models.SlugField(unique=True, null=True, blank=True)
 
-    def save(self, *args, force_insert=False, force_update=False, using=None, update_fields=None):
+    def save(
+        self,
+        *args,
+        force_insert=False,
+        force_update=False,
+        using=None,
+        update_fields=None
+    ):
         if not self.slug:
             self.slug = slugify(self.name)
-        super().save(*args, force_insert=force_insert, force_update=force_update, using=using,
-                     update_fields=update_fields)
+        super().save(
+            *args,
+            force_insert=force_insert,
+            force_update=force_update,
+            using=using,
+            update_fields=update_fields
+        )
 
     def __str__(self):
         return self.name
