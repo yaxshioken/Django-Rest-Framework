@@ -1,102 +1,46 @@
-from django.db.models import Count
-from rest_framework import permissions, status
+from drf_yasg.openapi import Response
+from rest_framework import status
+from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import action
-from rest_framework.generics import get_object_or_404
-from rest_framework.response import Response
-from rest_framework.viewsets import ViewSet
+
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.viewsets import ModelViewSet
+from yaml import serialize
 
 from account.models import Interest, User
 from account.serializers import (AccountDetialSeriaizer, InterestSerializer,
-                                 UserSerializer, ProfileSerializer)
+                                 UserSerializer)
 
 
-class AccountViewSet(ViewSet):
+class AccountViewSet(ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+    permission_classes = (IsAuthenticated,)
+    authentication_classes = (TokenAuthentication,)
 
-    @action(detail=False, methods=["POST"], url_path="top-accounts")
-    def top_interests(self, request,*args, **kwargs):
-        top_interests = User.interests.get(count=Count('interests')).order_by('-count')
-        serializer = ProfileSerializer(top_interests, many=True)
-        returnResponse(serializer.data, status=status.HTTP_200_OK)
+    def create(self, request, *args, **kwargs):
+        return super().create(request, *args, **kwargs)
 
-    def list(self, request):
-        serializer = UserSerializer(self.queryset, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+    def perform_update(self, serializer):
+        super().perform_update(serializer)
 
-    def create(self, request):
-        serializer = UserSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    # def perform_update(self, serializer,*args, **kwargs):
+    #
+    #     serializer = UserSerializer(instance=self.request.user)
+    #     serializer.update(self.request.data)
+    #     serializer.save(raiseExceptions=True)
+    #     return Response(serializer.data, status=status.HTTP_200_OK)
 
-    def retrieve(self, request, pk=None):
-        user = get_object_or_404(User, pk=pk)
-        serializer = AccountDetialSeriaizer(instance=user, data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_200_OK)
+    def partial_update(self, request, *args, **kwargs):
+        return super().partial_update(request, *args, **kwargs)
 
-    def partial_update(self, request, pk=None):
-        user = get_object_or_404(User, pk=pk)
-        serializer = AccountDetialSeriaizer(user, data=request.data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    def update(self, request, pk=None):
-        user = get_object_or_404(User, pk=pk)
-        serializer = UserSerializer(user, data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    def destroy(self, request, pk=None):
-        user = get_object_or_404(User, pk=pk)
-        user.delete()
-        return Response(
-            {"message": "Successfully deleted"}, status=status.HTTP_204_NO_CONTENT
-        )
+    @action(detail=True, methods=["get"], url_path="account_interests")
+    def interests(self, *args, **kwargs):
+        account = self.get_object()
+        serializer = InterestSerializer(account.profile.interests, many=True)
+        return Response(serializer.data)
 
 
-class InterestViewSet(ViewSet):
+class InterestViewSet(ModelViewSet):
     queryset = Interest.objects.all()
     serializer_class = InterestSerializer
-
-    def list(self, request):
-        serializer = InterestSerializer(self.queryset, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    def create(self, request):
-        serializer = InterestSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-    def retrieve(self, request, pk=None):
-        user = get_object_or_404(User, pk=pk)
-        serializer = InterestSerializer(instance=user, data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    def partial_update(self, request, pk=None):
-        user = get_object_or_404(User, pk=pk)
-        serializer = InterestSerializer(user, data=request.data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    def update(self, request, pk=None):
-        user = get_object_or_404(User, pk=pk)
-        serializer = InterestSerializer(user, data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    def destroy(self, request, pk=None):
-        user = get_object_or_404(User, pk=pk)
-        user.delete()
-        return Response(
-            {"message": "Successfully deleted"}, status=status.HTTP_204_NO_CONTENT
-        )

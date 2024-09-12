@@ -17,7 +17,7 @@ class Choice(models.Model):
     question = models.TextField()
 
     def __str__(self):
-        return self.choice
+        return self.question
 
 
 class Vote(models.Model):
